@@ -1,4 +1,7 @@
+
 Basic full stack App for the Tech exercise of Red Mati:
+
+Full arch design - see the design folder
 
 Terminal 1 — API:
 cd RedMati.Counsel.API
