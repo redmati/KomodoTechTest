@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { caseProfilesApi } from '../../api/caseProfiles';
 import { appointmentsApi } from '../../api/appointments';
 import { caseNotesApi } from '../../api/caseNotes';
+import { usersApi } from '../../api/users';
 import { Tabs } from '../../components/ui/Tabs';
 import { Badge, statusToBadgeVariant } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -82,6 +83,11 @@ export function CaseProfileDetailPage() {
     queryKey: ['case-notes', id],
     queryFn: () => caseNotesApi.list(Number(id)),
     enabled: Boolean(id),
+  });
+
+  const usersQuery = useQuery({
+    queryKey: ['users'],
+    queryFn: usersApi.list,
   });
 
   // ─── Mutations ────────────────────────────────────────────────────────────
@@ -455,10 +461,15 @@ export function CaseProfileDetailPage() {
         }
       >
         <form className="space-y-4" noValidate>
-          <Input
-            label="Counsellor User ID *"
-            type="number"
-            placeholder="Enter the user ID to grant access"
+          <Select
+            label="Counsellor *"
+            options={
+              usersQuery.data?.map((u) => ({
+                value: u.id,
+                label: `${u.fullName} (${u.email})`,
+              })) ?? []
+            }
+            placeholder="Select a counsellor"
             {...grantAccessForm.register('userId', { valueAsNumber: true })}
             error={grantAccessForm.formState.errors.userId?.message}
           />

@@ -32,6 +32,8 @@ APPLICATION LAYER
     • Audit Logger
     • Backend services (Note: I prfer to use SQL server, enforce with Transparent data encryption SQL server feature to keep data encrypted due to sensitivity of counselling notes)
         • SQL Server Primary DB (for main Reads/Writes)
+          Row-Level Security per tenant
+          Maybe consider Audit trails via SQL Audit?
           Automated backups (DRE responsibility)
         • SQL server read-only replaica DB for Reporting or insights
           async replication from Primary (DRE responsibility)
@@ -221,13 +223,13 @@ Counsellor A (Owner)
 │       Counsellor B: read-only on profile + related objects
 └── Can transfer OWNER → Counsellor C  (atomic: old owner loses ownership)
 
-Any Counsellor (in the same tenant/school):
+Any Counsellor (same tenant):
 ├── Can view PENDING referrals
 ├── Can assign PENDING referral to self or any other counsellor
-└── Can soft-delete PENDING referral (must supply plain text reason)
+└── Can soft-delete PENDING referral (must supply text reason)
 ```
 
-Access is enforced at the **service layer** in the API.
+Access is enforced at the **service layer** in the API; the database RLS provides an additional enforcement layer ensuring tenant isolation.
 
 ---
 
@@ -277,10 +279,10 @@ Handling student mental-health records requires careful attention to UK data pro
 
 | Decision | Chosen | Rationale | Alternative |
 |---|---|---|---|
-| Multi-tenancy model | Row-level (`tenant_id`), enforced in API service layer | Simplest to operate for MVP; single schema to migrate | Schema-per-tenant for stronger isolation at scale |
+| Multi-tenancy model | Row-level (`tenant_id`) + RLS | Simplest to operate for MVP; single schema to migrate | Schema-per-tenant for stronger isolation at scale |
 | Auth | JWT (stateless) | Scales horizontally with no shared session store | Session cookies + Redis if stricter revocation is needed |
 | API style | REST | Simpler to build and test for this CRUD-heavy domain | GraphQL would add flexibility for the profile detail view but adds complexity |
-| Case note encryption | Application-layer AES + TDE | Protects against storage-layer breaches | If adaopting SQL server for BE, use Field-level Always Encrypted — more performant but less portable |
+| Case note encryption | Application-layer AES + TDE | Protects against storage-layer breaches | Field-level Always Encrypted (SQL Server feature) — more performant but less portable |
 | Referral public URL | Tenant code in URL | Human-readable, no auth required, no secret in URL | Signed/expiring JWT link — better for time-limited access but more complex |
 | Read replica | Yes (from day 1) | Calendar queries + reporting can be read-heavy; isolates writes | Single instance fine for very low load but introduces operational debt later |
 
@@ -322,30 +324,3 @@ Handling student mental-health records requires careful attention to UK data pro
 ├── design/                  # This document + diagrams
 └── docker-compose.yml       # Local dev: SQL Server + API + client
 ```
-
-
-
-## Reasoning & Commentary
-• I have spent a good amount of time analysing the applicable System architecture/design proposal to satisfy all the core requirements of the exercise. Apologies as I only used plain MD file to achieve this.
-
-• I didn't managed to get to containerising the solution given the press for time but the app contains the requisite full stack using the tech stack specifications.
-
-• The backend I used is in-memory only. To productionise, this should be converted to a permanent data store ideally SQL server or equivalent RDBMS.
-
-• I haven't done BE implementation using Express so I use gen code to perform this task in the limited timeframe. I'm a fast learner and can easily adapt to Komodo's tech stack if selected for the role.
-
-• When a Case profile is created in the page, current implementation lacks auto-refreshing it on the list
-
-• Referral linking to Case Profile is manual input text - this needs to be converted to list lookup.
-
-• Overall, the UI/UX flow requires fine-tuning to tighten and introduce validations
-
-So in summary the following are next steps to further eveolve the app for production-readiness:
-1. Real database + migrations
-2. Proper refresh token flow
-3. Input validation + global error handlers
-4. Audit logging
-5. Encryption at rest (employ TDE to secure sensitive counselling & notes data)
-6. Containerisation + CI/CD
-7. Automation Tests and integrate into CI/CD
-8. Monitoring and Operational excellence (establish observability alerts, SLOs and SLAs to monitor health)
