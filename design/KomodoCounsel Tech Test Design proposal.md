@@ -341,7 +341,8 @@ Handling student mental-health records requires careful attention to UK data pro
 • Overall, the UI/UX flow requires fine-tuning to tighten and introduce validations
 
 So in summary the following are next steps to further eveolve the app for production-readiness:
-1. Real database + migrations
+
+1. Real database + migrations (use SQL server or similar RDBMS)
 2. Proper refresh token flow
 3. Input validation + global error handlers
 4. Audit logging
