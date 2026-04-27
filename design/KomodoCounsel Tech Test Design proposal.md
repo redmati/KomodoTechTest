@@ -340,6 +340,7 @@ Handling student mental-health records requires careful attention to UK data pro
 
 • Overall, the UI/UX flow requires fine-tuning to tighten and introduce validations
 
+
 So in summary the following are next steps to further eveolve the app for production-readiness:
 
 1. Real database + migrations (use SQL server or similar RDBMS)
@@ -350,3 +351,4 @@ So in summary the following are next steps to further eveolve the app for produc
 6. Containerisation + CI/CD
 7. Automation Tests and integrate into CI/CD
 8. Monitoring and Operational excellence (establish observability alerts, SLOs and SLAs to monitor health)
+9. Further stretch: add Canary to CD if moving solution to Scale (e.g. via GHA or similar)
